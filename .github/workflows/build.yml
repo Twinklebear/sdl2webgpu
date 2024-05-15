@@ -1,0 +1,23 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Make build directory
+        working-directory: ${{ github.workspace }}/example
+        run: mkdir cmake-build
+
+      - name: Configure
+        working-directory: ${{ github.workspace }}/example/cmake-build
+        run: cmake ..
+
+      - name: Build
+        working-directory: ${{ github.workspace }}/example/cmake-build
+        run: make -j `nproc`
