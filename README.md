@@ -48,7 +48,7 @@ https://github.com/Twinklebear/webgpu-cpp-wasm
 
 int main(int argc, char **argv) {
   if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS) != 0){
-    std::cerr << "Failed to init SDL2\n";
+    fprintf(stderr, "Failed to init SDL2\n");
     return -1;
   }
 

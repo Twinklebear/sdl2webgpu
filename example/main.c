@@ -1,4 +1,5 @@
 #include <SDL.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <webgpu/webgpu.h>
 
@@ -6,7 +7,7 @@
 
 int main(int argc, char **argv) {
   if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS) != 0) {
-    std::cerr << "Failed to init SDL2\n";
+    fprintf(stderr, "Failed to init SDL2\n");
     return -1;
   }
 
@@ -42,3 +43,4 @@ int main(int argc, char **argv) {
   SDL_Quit();
 
   return 0;
+}
