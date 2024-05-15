@@ -11,8 +11,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install SDL2
-        run: sudo apt install -y libsdl2-dev
+      - name: Install Dependencies
+        run: sudo apt install -y libsdl2-dev libx11-xcb-dev
 
       - name: Make build directory
         working-directory: ${{ github.workspace }}/example
