@@ -19,3 +19,7 @@ add_executable(sdl2webgpu_example main.c)
 target_link_libraries(sdl2webgpu_example PUBLIC sdl2webgpu)
 set_target_properties(sdl2webgpu PROPERTIES C_STANDARD 17 C_STANDARD_REQUIRED
                                                           ON)
+
+if(WIN32)
+  target_compile_definitions(sdl2webgpu PUBLIC SDL_MAIN_HANDLED)
+endif()
