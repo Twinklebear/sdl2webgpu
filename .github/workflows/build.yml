@@ -6,13 +6,53 @@ on:
       - main
 
 jobs:
-  build:
+  ubuntu:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
       - name: Install Dependencies
         run: sudo apt install -y libsdl2-dev libx11-xcb-dev
+
+      - name: Make build directory
+        working-directory: ${{ github.workspace }}/example
+        run: mkdir cmake-build
+
+      - name: Configure
+        working-directory: ${{ github.workspace }}/example/cmake-build
+        run: cmake ..
+
+      - name: Build
+        working-directory: ${{ github.workspace }}/example/cmake-build
+        run: make -j `nproc`
+
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Dependencies
+        run: vcpkg install sdl2:x64-windows
+
+      - name: Make build directory
+        working-directory: ${{ github.workspace }}/example
+        run: mkdir cmake-build
+
+      - name: Configure
+        working-directory: ${{ github.workspace }}/example/cmake-build
+        run: cmake ..
+
+      - name: Build
+        working-directory: ${{ github.workspace }}/example/cmake-build
+        run: cmake --build . --config release
+
+  macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Dependencies
+        run: brew install sdl2
 
       - name: Make build directory
         working-directory: ${{ github.workspace }}/example
