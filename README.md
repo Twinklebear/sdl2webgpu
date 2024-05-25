@@ -22,10 +22,14 @@ WGPUSurface sdl2GetWGPUSurface(WGPUInstance instance, SDL_Window *window);
 
 The library is designed to be dropped into any CMake project, and doesn't
 build as a standalone library (also see the example). Similar to
-glfw3webgpu, you can either:
+glfw3webgpu, you can:
 
-- Add the library source files to your project or via FetchContent and
-  use `add_subdirectory(sdl2webgpu)` (or appropriate path)
+- Fetch the library using FetchContent by including the provided
+  [`FetchSDL2WebGPU.cmake`](FetchSDL2WebGPU.cmake) by adding the file to your
+  project and adding `include(<path>/FetchSDL2WebGPU.cmake)` to your CMakeLists.
+  This should be done after finding Dawn + SDL2.
+- Add the library source files to your project via a submodule and include
+  it in your build via `add_subdirectory(sdl2webgpu)`
 - Copy the `sdl2webgpu.*` files into your project and copy the CMake
   code from [`CMakeLists.txt`](CMakeLists.txt) to build the files into
   your own CMakeLists.txt
