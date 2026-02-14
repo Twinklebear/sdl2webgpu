@@ -1,168 +1,215 @@
-# Based on Elie Michel's Dawn Fetch/Build CMake script
-# https://github.com/eliemichel/WebGPU-distribution/blob/main/dawn/FetchDawnSource.cmake
+# This file is part of the "Learn WebGPU for C++" book.
+#   https://eliemichel.github.io/LearnWebGPU
+#
+# MIT License
+# Copyright (c) 2022-2025 Elie Michel and the wgpu-native authors
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
 
 # Prevent multiple includes
-if(TARGET dawn_native)
-  return()
+if (TARGET dawn_native)
+	return()
+endif()
+
+# Check 'WEBGPU_LINK_TYPE' argument
+if(WEBGPU_LINK_TYPE STREQUAL "STATIC")
+	message(FATAL_ERROR "Link type '${WEBGPU_LINK_TYPE}' is not supported yet in Dawn source distribution. Try falling back to WEBGPU_LINK_TYPE=SHARED.")
 endif()
 
 # Override Dawn default cache variables with a more minimalistic choice
 # of backend and the fetch script instead of depot_tools.
 option(DAWN_FETCH_DEPENDENCIES "Use fetch_dawn_dependencies.py as an alternative to using depot_tools" ON)
 
-if(APPLE)
-  set(ENABLE_VULKAN OFF)
-  set(ENABLE_METAL ON)
-  set(ENABLE_D3D12 OFF)
-elseif(WIN32)
-  set(ENABLE_VULKAN OFF)
-  set(ENABLE_METAL OFF)
-  set(ENABLE_D3D12 ON)
+if (APPLE)
+	set(ENABLE_VULKAN OFF)
+	set(ENABLE_METAL ON)
 else()
-  set(ENABLE_VULKAN ON)
-  set(ENABLE_METAL OFF)
-  set(ENABLE_D3D12 OFF)
+	set(ENABLE_VULKAN ON)
+	set(ENABLE_METAL OFF)
 endif()
-option(DAWN_ENABLE_D3D11 "Enable compilation of the D3D11 backend" OFF)
-option(DAWN_ENABLE_D3D12 "Enable compilation of the D3D12 backend" ${ENABLE_D3D12})
+option(DAWN_ENABLE_VULKAN "Enable compilation of the Vulkan backend" ${ENABLE_VULKAN})
 option(DAWN_ENABLE_METAL "Enable compilation of the Metal backend" ${ENABLE_METAL})
+option(DAWN_ENABLE_D3D11 "Enable compilation of the D3D11 backend" OFF)
+option(DAWN_ENABLE_D3D12 "Enable compilation of the D3D12 backend" OFF)
 option(DAWN_ENABLE_NULL "Enable compilation of the Null backend" OFF)
 option(DAWN_ENABLE_DESKTOP_GL "Enable compilation of the OpenGL backend" OFF)
 option(DAWN_ENABLE_OPENGLES "Enable compilation of the OpenGL ES backend" OFF)
-option(DAWN_ENABLE_VULKAN "Enable compilation of the Vulkan backend" ${ENABLE_VULKAN})
 option(TINT_BUILD_SPV_READER "Build the SPIR-V input reader" OFF)
 option(DAWN_BUILD_SAMPLES "Enables building Dawn's samples" OFF)
 option(DAWN_BUILD_TESTS "Enables building Dawn's tests" OFF)
 option(TINT_BUILD_CMD_TOOLS "Build the Tint command line tools" OFF)
 option(TINT_BUILD_IR_BINARY "Build IR binary format support" OFF)
-option(DAWN_USE_GLFW "Use GLFW" OFF)
 
 include(FetchContent)
 find_package(Python3 REQUIRED)
 
-set(DAWN_VERSION "7187" CACHE STRING "Dawn chromium version")
-set(DAWN_MIRROR "https://dawn.googlesource.com/dawn" CACHE STRING "Dawn git mirror")
-
 FetchContent_Declare(
-  dawn
-  # Manual download mode, even shallower than GIT_SHALLOW ON
-  DOWNLOAD_COMMAND
-    cd ${FETCHCONTENT_BASE_DIR}/dawn-src &&
-    git init &&
-    git fetch --depth=1 ${DAWN_MIRROR} chromium/${DAWN_VERSION} &&
-    git reset --hard FETCH_HEAD)
+	dawn
+	#GIT_REPOSITORY ${DAWN_SOURCE_MIRROR}
+	#GIT_TAG        chromium/${DAWN_VERSION}
+	#GIT_SHALLOW ON
 
-# GCC 14+ errors on template-id in destructor declarations in Dawn code
-include(CheckCXXCompilerFlag)
-check_cxx_compiler_flag(-Wno-template-id-cdtor HAS_WNO_TEMPLATE_ID_CDTOR)
-if(HAS_WNO_TEMPLATE_ID_CDTOR)
-  add_compile_options(-Wno-template-id-cdtor)
-endif()
+	# Manual download mode, even shallower than GIT_SHALLOW ON
+	DOWNLOAD_COMMAND
+		cd ${FETCHCONTENT_BASE_DIR}/dawn-src &&
+		git init &&
+		git fetch --depth=1 ${DAWN_SOURCE_MIRROR} chromium/${DAWN_VERSION} &&
+		git reset --hard FETCH_HEAD
 
+	PATCH_COMMAND
+		cmake
+		"-DPATCH_FILE=${CMAKE_CURRENT_LIST_DIR}/patch/dawn.patch"
+		-P "${PROJECT_SOURCE_DIR}/cmake/apply_patch_idempotent.cmake"
+)
 FetchContent_MakeAvailable(dawn)
 
 set(AllDawnTargets
-    core_tables
-    dawn_common
-    dawn_glfw
-    dawn_headers
-    dawn_native
-    dawn_platform
-    dawn_proc
-    dawn_wire
-    dawn_native_objects
-    dawn_shared_utils
-    partition_alloc
-    dawncpp
-    dawncpp_headers
-    enum_string_mapping
-    extinst_tables
-    webgpu_dawn
-    webgpu_headers_gen
-    tint-format
-    tint-lint
-    tint_api
-    tint_api_common
-    tint_cmd_common
-    tint_lang_core
-    tint_lang_core_common
-    tint_lang_core_constant
-    tint_lang_core_intrinsic
-    tint_lang_core_ir
-    tint_lang_core_ir_analysis
-    tint_lang_core_ir_transform
-    tint_lang_core_ir_transform_common
-    tint_lang_core_ir_type
-    tint_lang_core_type
-    tint_lang_glsl_validate
-    tint_lang_hlsl_writer_common
-    tint_lang_hlsl_writer_helpers
-    tint_lang_hlsl_writer_printer
-    tint_lang_hlsl_writer_raise
-    tint_lang_msl
-    tint_lang_msl_intrinsic
-    tint_lang_msl_ir
-    tint_lang_spirv
-    tint_lang_spirv_intrinsic
-    tint_lang_spirv_ir
-    tint_lang_spirv_reader_lower
-    tint_lang_spirv_type
-    tint_lang_spirv_validate
-    tint_lang_spirv_writer
-    tint_lang_spirv_writer_common
-    tint_lang_spirv_writer_helpers
-    tint_lang_spirv_writer_printer
-    tint_lang_spirv_writer_raise
-    tint_lang_wgsl
-    tint_lang_wgsl_ast
-    tint_lang_wgsl_ast_transform
-    tint_lang_wgsl_common
-    tint_lang_wgsl_features
-    tint_lang_wgsl_helpers
-    tint_lang_wgsl_inspector
-    tint_lang_wgsl_intrinsic
-    tint_lang_wgsl_ir
-    tint_lang_wgsl_program
-    tint_lang_wgsl_reader
-    tint_lang_wgsl_reader_lower
-    tint_lang_wgsl_reader_parser
-    tint_lang_wgsl_reader_program_to_ir
-    tint_lang_wgsl_resolver
-    tint_lang_wgsl_sem
-    tint_lang_wgsl_writer
-    tint_lang_wgsl_writer_ast_printer
-    tint_lang_wgsl_writer_ir_to_program
-    tint_lang_wgsl_writer_raise
-    tint_lang_wgsl_writer_syntax_tree_printer
-    tint_utils
-    tint_utils_bytes
-    tint_utils_command
-    tint_utils_containers
-    tint_utils_diagnostic
-    tint_utils_file
-    tint_utils_ice
-    tint_utils_macros
-    tint_utils_math
-    tint_utils_memory
-    tint_utils_rtti
-    tint_utils_strconv
-    tint_utils_symbol
-    tint_utils_system
-    tint_utils_text
-    tint_utils_text_generator)
+	core_tables
+	dawn_common
+	dawn_glfw
+	dawn_headers
+	dawn_native
+	dawn_platform
+	dawn_proc
+	dawn_wire
+	dawn_native_objects
+	dawn_shared_utils
+	partition_alloc
+	dawncpp
+	dawncpp_headers
+	enum_string_mapping
+	extinst_tables
+	webgpu_dawn
+	webgpu_headers_gen
 
-foreach(Target ${AllDawnTargets})
-  if(TARGET ${Target})
-    get_property(AliasedTarget TARGET "${Target}" PROPERTY ALIASED_TARGET)
-    if("${AliasedTarget}" STREQUAL "")
-      set_property(TARGET ${Target} PROPERTY FOLDER "Dawn")
-    endif()
-  else()
-    message(STATUS "NB: '${Target}' is no longer a target of the Dawn project.")
-  endif()
+	tint-format
+	tint-lint
+	tint_api
+	tint_api_common
+	tint_cmd_common
+	tint_lang_core
+	tint_lang_core_common
+	tint_lang_core_constant
+	tint_lang_core_intrinsic
+	tint_lang_core_ir
+	tint_lang_core_ir_analysis
+	tint_lang_core_ir_transform
+	tint_lang_core_ir_transform_common
+	tint_lang_core_ir_type
+	tint_lang_core_type
+	tint_lang_glsl_validate
+	tint_lang_hlsl_writer_common
+	tint_lang_hlsl_writer_helpers
+	tint_lang_hlsl_writer_printer
+	tint_lang_hlsl_writer_raise
+	tint_lang_msl
+	tint_lang_msl_intrinsic
+	tint_lang_msl_ir
+	tint_lang_spirv
+	tint_lang_spirv_intrinsic
+	tint_lang_spirv_ir
+	tint_lang_spirv_reader_lower
+	tint_lang_spirv_type
+	tint_lang_spirv_validate
+	tint_lang_spirv_writer
+	tint_lang_spirv_writer_common
+	tint_lang_spirv_writer_helpers
+	tint_lang_spirv_writer_printer
+	tint_lang_spirv_writer_raise
+	tint_lang_wgsl
+	tint_lang_wgsl_ast
+	tint_lang_wgsl_ast_transform
+	tint_lang_wgsl_common
+	tint_lang_wgsl_features
+	tint_lang_wgsl_helpers
+	tint_lang_wgsl_inspector
+	tint_lang_wgsl_intrinsic
+	tint_lang_wgsl_ir
+	tint_lang_wgsl_program
+	tint_lang_wgsl_reader
+	tint_lang_wgsl_reader_lower
+	tint_lang_wgsl_reader_parser
+	tint_lang_wgsl_reader_program_to_ir
+	tint_lang_wgsl_resolver
+	tint_lang_wgsl_sem
+	tint_lang_wgsl_writer
+	tint_lang_wgsl_writer_ast_printer
+	tint_lang_wgsl_writer_ir_to_program
+	tint_lang_wgsl_writer_raise
+	tint_lang_wgsl_writer_syntax_tree_printer
+	tint_utils
+	tint_utils_bytes
+	tint_utils_command
+	tint_utils_containers
+	tint_utils_diagnostic
+	tint_utils_file
+	tint_utils_ice
+	tint_utils_macros
+	tint_utils_math
+	tint_utils_memory
+	tint_utils_rtti
+	tint_utils_strconv
+	tint_utils_symbol
+	tint_utils_system
+	tint_utils_text
+	tint_utils_text_generator
+)
+
+foreach (Target ${AllDawnTargets})
+	if (TARGET ${Target})
+		# Is a target...
+		get_property(AliasedTarget TARGET "${Target}" PROPERTY ALIASED_TARGET)
+		if ("${AliasedTarget}" STREQUAL "")
+			# ...and is not an alias -> move to the Dawn folder
+			set_property(TARGET ${Target} PROPERTY FOLDER "Dawn")
+		endif()
+	else()
+		message(STATUS "NB: '${Target}' is no longer a target of the Dawn project.")
+	endif()
 endforeach()
 
+#################################################
+# Create the 'webgpu' target that exposes the same interface as other backends:
+
+# Unify target name with other backends and provide webgpu.hpp
 add_library(webgpu INTERFACE)
 target_link_libraries(webgpu INTERFACE webgpu_dawn)
-target_include_directories(webgpu
-                           INTERFACE ${dawn_SOURCE_DIR}/include)
+target_include_directories(webgpu INTERFACE
+	"${CMAKE_CURRENT_SOURCE_DIR}/include"
+	"${dawn_SOURCE_DIR}/include"
+)
+
+# This is used to advertise the flavor of WebGPU that this zip provides
+target_compile_definitions(webgpu INTERFACE WEBGPU_BACKEND_DAWN)
+# This adds webgpu.hpp
+target_include_directories(webgpu INTERFACE "${CMAKE_CURRENT_LIST_DIR}/include")
+
+# The application's binary must find the .dll/.so/.dylib at runtime,
+# so we automatically copy it next to the binary.
+function(target_copy_webgpu_binaries Target)
+	add_custom_command(
+		TARGET ${Target} POST_BUILD
+		COMMAND
+			"${CMAKE_COMMAND}" -E copy_if_different
+			"$<TARGET_FILE_DIR:webgpu_dawn>/$<TARGET_FILE_NAME:webgpu_dawn>"
+			"$<TARGET_FILE_DIR:${Target}>"
+		COMMENT
+			"Copying '$<TARGET_FILE_DIR:webgpu_dawn>/$<TARGET_FILE_NAME:webgpu_dawn>' to '$<TARGET_FILE_DIR:${Target}>'..."
+	)
+endfunction()

@@ -8,6 +8,8 @@ endif()
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
 if(NOT EMSCRIPTEN)
+  set(DAWN_VERSION "7187" CACHE STRING "Dawn chromium version")
+  set(DAWN_SOURCE_MIRROR "https://dawn.googlesource.com/dawn" CACHE STRING "Dawn git mirror")
   include(cmake/FetchDawn.cmake)
   find_package(SDL2 REQUIRED CONFIG REQUIRED COMPONENTS SDL2)
   find_package(SDL2 REQUIRED CONFIG COMPONENTS SDL2main)
