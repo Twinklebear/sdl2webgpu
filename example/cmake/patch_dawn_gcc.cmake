@@ -1,0 +1,8 @@
+# Fix template-id on destructor (ill-formed in C++20+, hard error on GCC 13+)
+# Dawn's CommandLineParser.h uses ~EnumOption<E>() which should be ~EnumOption()
+set(FILE_PATH "${SOURCE_DIR}/src/dawn/utils/CommandLineParser.h")
+if(EXISTS "${FILE_PATH}")
+  file(READ "${FILE_PATH}" content)
+  string(REPLACE "~EnumOption<E>()" "~EnumOption()" content "${content}")
+  file(WRITE "${FILE_PATH}" "${content}")
+endif()

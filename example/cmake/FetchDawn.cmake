@@ -77,15 +77,12 @@ FetchContent_Declare(
 		git init &&
 		git fetch --depth=1 ${DAWN_SOURCE_MIRROR} chromium/${DAWN_VERSION} &&
 		git reset --hard FETCH_HEAD
+
+	# Fix template-id on destructor (ill-formed in C++20+, hard error on GCC 13+)
+	PATCH_COMMAND
+		${CMAKE_COMMAND} -DSOURCE_DIR=<SOURCE_DIR>
+		-P "${CMAKE_CURRENT_LIST_DIR}/patch_dawn_gcc.cmake"
 )
-
-# GCC 14+ errors on template-id in destructor declarations in Dawn code
-include(CheckCXXCompilerFlag)
-check_cxx_compiler_flag(-Wno-template-id-cdtor HAS_WNO_TEMPLATE_ID_CDTOR)
-if(HAS_WNO_TEMPLATE_ID_CDTOR)
-	add_compile_options(-Wno-template-id-cdtor)
-endif()
-
 FetchContent_MakeAvailable(dawn)
 
 set(AllDawnTargets
