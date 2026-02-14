@@ -23,8 +23,10 @@ set_target_properties(sdl2webgpu PROPERTIES C_STANDARD 17 C_STANDARD_REQUIRED
                                                           ON)
 
 if(EMSCRIPTEN)
-  target_link_options(sdl2webgpu_example PRIVATE -sUSE_WEBGPU=1
-                      -sALLOW_MEMORY_GROWTH=1 -sUSE_SDL=2)
+  target_compile_options(sdl2webgpu_example PRIVATE --use-port=sdl2
+                                                    --use-port=emdawnwebgpu)
+  target_link_options(sdl2webgpu_example PRIVATE -sALLOW_MEMORY_GROWTH=1
+                      -sUSE_SDL=2 --use-port=emdawnwebgpu)
 elseif(WIN32)
   target_compile_definitions(sdl2webgpu PUBLIC SDL_MAIN_HANDLED)
 endif()

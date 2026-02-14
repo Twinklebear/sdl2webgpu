@@ -14,7 +14,8 @@ WGPUSurface sdl2GetWGPUSurface(WGPUInstance instance, SDL_Window *window)
 #if defined(__EMSCRIPTEN__)
     WGPUEmscriptenSurfaceSourceCanvasHTMLSelector native_surface = {0};
     native_surface.chain.sType = WGPUSType_EmscriptenSurfaceSourceCanvasHTMLSelector;
-    native_surface.selector = "#canvas";
+    native_surface.selector.data = "#canvas";
+    native_surface.selector.length = 7;
 #else
     SDL_SysWMinfo wm_info;
     SDL_VERSION(&wm_info.version);
