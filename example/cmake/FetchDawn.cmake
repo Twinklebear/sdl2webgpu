@@ -77,11 +77,6 @@ FetchContent_Declare(
 		git init &&
 		git fetch --depth=1 ${DAWN_SOURCE_MIRROR} chromium/${DAWN_VERSION} &&
 		git reset --hard FETCH_HEAD
-
-	# Fix template-id on destructor (ill-formed in C++20+, hard error on GCC 13+)
-	PATCH_COMMAND
-		${CMAKE_COMMAND} -DSOURCE_DIR=<SOURCE_DIR>
-		-P "${CMAKE_CURRENT_LIST_DIR}/patch_dawn_gcc.cmake"
 )
 FetchContent_MakeAvailable(dawn)
 
