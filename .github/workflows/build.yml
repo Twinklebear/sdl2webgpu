@@ -16,10 +16,16 @@ jobs:
           sudo apt update --fix-missing
           sudo apt install -y libsdl2-dev libx11-xcb-dev python3
 
+      - name: Cache Dawn
+        uses: actions/cache@v4
+        with:
+          path: example/cmake-build/_deps
+          key: dawn-${{ runner.os }}-${{ hashFiles('example/cmake/FetchDawn.cmake', 'example/CMakeLists.txt') }}
+
       - name: Configure
         working-directory: ${{ github.workspace }}/example
         run: |
-          mkdir cmake-build
+          mkdir -p cmake-build
           cd cmake-build
           cmake ..
 
@@ -35,10 +41,16 @@ jobs:
       - name: Install Dependencies
         run: vcpkg install sdl2:x64-windows
 
+      - name: Cache Dawn
+        uses: actions/cache@v4
+        with:
+          path: example/cmake-build/_deps
+          key: dawn-${{ runner.os }}-${{ hashFiles('example/cmake/FetchDawn.cmake', 'example/CMakeLists.txt') }}
+
       - name: Configure
         working-directory: ${{ github.workspace }}/example
         run: |
-          mkdir cmake-build
+          mkdir -Force cmake-build
           cd cmake-build
           cmake -A x64 ${env:GITHUB_WORKSPACE}/example/ `
             -G "Visual Studio 17 2022" `
@@ -56,10 +68,16 @@ jobs:
       - name: Install Dependencies
         run: brew install sdl2
 
+      - name: Cache Dawn
+        uses: actions/cache@v4
+        with:
+          path: example/cmake-build/_deps
+          key: dawn-${{ runner.os }}-${{ hashFiles('example/cmake/FetchDawn.cmake', 'example/CMakeLists.txt') }}
+
       - name: Configure
         working-directory: ${{ github.workspace }}/example
         run: |
-          mkdir cmake-build
+          mkdir -p cmake-build
           cd cmake-build
           cmake ..
 
