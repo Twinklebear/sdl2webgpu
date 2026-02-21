@@ -12,16 +12,17 @@
 WGPUSurface sdl2GetWGPUSurface(WGPUInstance instance, SDL_Window *window)
 {
 #if defined(__EMSCRIPTEN__)
-    WGPUSurfaceDescriptorFromCanvasHTMLSelector native_surface = {0};
-    native_surface.chain.sType = WGPUSType_SurfaceDescriptorFromCanvasHTMLSelector;
-    native_surface.selector = "#canvas";
+    WGPUEmscriptenSurfaceSourceCanvasHTMLSelector native_surface = {0};
+    native_surface.chain.sType = WGPUSType_EmscriptenSurfaceSourceCanvasHTMLSelector;
+    native_surface.selector.data = "#canvas";
+    native_surface.selector.length = 7;
 #else
     SDL_SysWMinfo wm_info;
     SDL_VERSION(&wm_info.version);
     SDL_GetWindowWMInfo(window, &wm_info);
 #if defined(SDL_VIDEO_DRIVER_WINDOWS)
-    WGPUSurfaceDescriptorFromWindowsHWND native_surface = {0};
-    native_surface.chain.sType = WGPUSType_SurfaceDescriptorFromWindowsHWND;
+    WGPUSurfaceSourceWindowsHWND native_surface = {0};
+    native_surface.chain.sType = WGPUSType_SurfaceSourceWindowsHWND;
     native_surface.hwnd = wm_info.info.win.window;
     native_surface.hinstance = wm_info.info.win.hinstance;
 #elif defined(SDL_VIDEO_DRIVER_COCOA)
@@ -30,18 +31,18 @@ WGPUSurface sdl2GetWGPUSurface(WGPUInstance instance, SDL_Window *window)
     [ns_window.contentView setWantsLayer:YES];
     [ns_window.contentView setLayer:metal_layer];
 
-    WGPUSurfaceDescriptorFromMetalLayer native_surface = {0};
-    native_surface.chain.sType = WGPUSType_SurfaceDescriptorFromMetalLayer;
+    WGPUSurfaceSourceMetalLayer native_surface = {0};
+    native_surface.chain.sType = WGPUSType_SurfaceSourceMetalLayer;
     native_surface.layer = metal_layer;
 
 #elif defined(SDL_VIDEO_DRIVER_X11)
-    WGPUSurfaceDescriptorFromXlibWindow native_surface = {0};
-    native_surface.chain.sType = WGPUSType_SurfaceDescriptorFromXlibWindow;
+    WGPUSurfaceSourceXlibWindow native_surface = {0};
+    native_surface.chain.sType = WGPUSType_SurfaceSourceXlibWindow;
     native_surface.display = wm_info.info.x11.display;
     native_surface.window = wm_info.info.x11.window;
 #elif defined(SDL_VIDEO_DRIVER_WAYLAND)
-    WGPUSurfaceDescriptorFromWaylandSurface native_surface = {0};
-    native_surface.chain.sType = WGPUSType_SurfaceDescriptorFromWaylandSurface;
+    WGPUSurfaceSourceWaylandSurface native_surface = {0};
+    native_surface.chain.sType = WGPUSType_SurfaceSourceWaylandSurface;
     native_surface.display = wm_info.info.wl.display;
     native_surface.surface = wm_info.info.wl.surface;
 #else
